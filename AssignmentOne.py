@@ -41,8 +41,25 @@ def setSquare(gameId, row, column, newChar):
 def getTurn(gameId):
     return boards[gameId][0]
 
-def doMove(gameId, row, column, player):
+def changeTurn(gameId):
+    turn = getTurn(gameId)
+    if turn == 'x':
+        boards[gameId] = 'o' + boards[gameId][1:]
+    else:
+        boards[gameId] = 'x' + boards[gameId][1:]
+    
+
+        
+def doCaptures(gameId, row, col, player):
     raise NotImplementedError
+
+def doMove(gameId, row, col, player):
+    setSquare(gameId, row, col, player)
+    doCaptures(gameId, row, col, player)
+
+
+    raise NotImplementedError
+
 
 def doComputerMove(gameId):
     legalMoves = []
