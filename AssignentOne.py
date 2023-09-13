@@ -7,7 +7,7 @@ gameId = 0
 
 @app.route("/newgame")
 def newGameHelp():
-    return "Usage: http://localhost:5000/newgame/<player>, where <player> is x or o"
+    return "Usage: http://localhost:5000/newgame/player, where player is x or o"
 
 @app.route("/newgame/<player>")
 def newgame(player):
@@ -26,12 +26,20 @@ def newgame(player):
 def nextmoveHelp():
     return "Usage: http://localhost:5000/nextmove/gameID/row/col, where:<br>-gameID is a previously created game<br>-row and column are a legal move space"
 
-@app.route("/nextmove/<gameID>/<row>/<column>")
+def getSquare(gameId, row, column):
+    return boards[gameId][row * 19 + column + 2]
+
+def setSquare(gameId, row, column, newChar):
+    idx = row * 19 + column + 2
+    boards[gameId] = boards[gameId][:idx] + newChar + boards[gameId][idx + 1:]
+
+@app.route("/nextmove/<int:gameId>/<int:row>/<int:column>")
 def nextmove(gameId, row, column):
     global boards
-    if gameId not in boards:
-        return 
-    pass
+    if gameId not in boards or row < 0 or row >= 19 or column < 0 or column >= 19 or getSquare(gameId, row, column) != "-":
+        return nextmoveHelp()
+    setSquare(gameId, row, column, 'O')
+    return json.dumps({'ID': gameId, 'row': row, 'column': column, 'state': boards[gameId]})
 
 
 
