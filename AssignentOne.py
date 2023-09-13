@@ -1,5 +1,6 @@
 import flask
 import json
+import random
 app = flask.Flask(__name__)
 
 boards = {}
@@ -11,13 +12,16 @@ def newGameHelp():
 
 @app.route("/newgame/<player>")
 def newgame(player):
-    if player.lower() not in ['x', 'o']:
+    player = player.lower()
+    if player not in ['x', 'o']:
         return newGameHelp()
     global boards
     global gameId
     newBoard = '-' * 361
-    boards[gameId] = f"{player}#{newBoard}#0#0"
-    output = {'ID': gameId, 'state': f"{player}#{newBoard}#0#0"}
+    boards[gameId] = f"x#{newBoard}#0#0"
+    if player == 'o':
+        doComputerMove(gameId)
+    output = {'ID': gameId, 'state': boards[gameId]}
     gameId += 1
 
     return json.dumps(output)
@@ -33,12 +37,30 @@ def setSquare(gameId, row, column, newChar):
     idx = row * 19 + column + 2
     boards[gameId] = boards[gameId][:idx] + newChar + boards[gameId][idx + 1:]
 
+def getTurn(gameId):
+    return boards[gameId][0]
+
+def doMove(gameId, row, column, player):
+    raise NotImplementedError
+
+def doComputerMove(gameId):
+    legalMoves = []
+    for row in range(19):
+        for column in range(19):
+            if getSquare(gameId, row, column) == '-':
+                legalMoves.append((row, column))
+    move = legalMoves[random.randint(len(legalMoves))]
+    doMove(gameId, move[0], move[1], getTurn(gameId))
+
+
+
 @app.route("/nextmove/<int:gameId>/<int:row>/<int:column>")
 def nextmove(gameId, row, column):
     global boards
     if gameId not in boards or row < 0 or row >= 19 or column < 0 or column >= 19 or getSquare(gameId, row, column) != "-":
         return nextmoveHelp()
-    setSquare(gameId, row, column, 'O')
+    #setSquare(gameId, row, column, 'O')
+    doMove(gameId, row, column, getTurn(gameId))
     return json.dumps({'ID': gameId, 'row': row, 'column': column, 'state': boards[gameId]})
 
 
