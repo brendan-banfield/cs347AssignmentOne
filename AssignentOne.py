@@ -5,8 +5,14 @@ app = flask.Flask(__name__)
 boards = {}
 gameId = 0
 
+@app.route("/newgame")
+def newGameHelp():
+    return "Usage: http://localhost:5000/newgame/<player>, where <player> is x or o"
+
 @app.route("/newgame/<player>")
 def newgame(player):
+    if player.lower() not in ['x', 'o']:
+        return newGameHelp()
     global boards
     global gameId
     newBoard = '-' * 361
