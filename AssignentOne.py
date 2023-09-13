@@ -7,12 +7,14 @@ gameId = 0
 
 @app.route("/newgame/<player>")
 def newgame(player):
+    global boards
+    global gameId
     newBoard = '-' * 361
     boards[gameId] = f"{player}#{newBoard}#0#0"
     output = {'ID': gameId, 'state': f"{player}#{newBoard}#0#0"}
     gameId += 1
 
-    return {output}
+    return json.dumps(output)
 
 
 @app.route("/nextmove/<gameID>/<row>/<column>")
