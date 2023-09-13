@@ -53,10 +53,11 @@ def changeTurn(gameId):
 def doCaptures(gameId, row, col, player):
     raise NotImplementedError
 
-def doMove(gameId, row, col, player):
-    setSquare(gameId, row, col, player)
-    doCaptures(gameId, row, col, player)
-
+def doMove(gameId, row, col):
+    turn = getTurn(gameId)
+    setSquare(gameId, row, col, turn)
+    doCaptures(gameId, row, col, turn)
+    changeTurn(gameId)
 
     raise NotImplementedError
 
@@ -68,7 +69,7 @@ def doComputerMove(gameId):
             if getSquare(gameId, row, column) == '-':
                 legalMoves.append((row, column))
     move = legalMoves[random.randint(len(legalMoves))]
-    doMove(gameId, move[0], move[1], getTurn(gameId))
+    doMove(gameId, move[0], move[1])
 
 
 
