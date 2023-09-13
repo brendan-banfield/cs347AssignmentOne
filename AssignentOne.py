@@ -22,9 +22,15 @@ def newgame(player):
 
     return json.dumps(output)
 
+@app.route("/nextmove/")
+def nextmoveHelp():
+    return "Usage: http://localhost:5000/nextmove/gameID/row/col, where:<br>-gameID is a previously created game<br>-row and column are a legal move space"
 
 @app.route("/nextmove/<gameID>/<row>/<column>")
 def nextmove(gameId, row, column):
+    global boards
+    if gameId not in boards:
+        return 
     pass
 
 
