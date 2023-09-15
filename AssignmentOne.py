@@ -101,6 +101,7 @@ def doCaptures(gameId, row, col, player):
             board[gameId][index + 2 - 1 - 19] = '-'
             board[gameId][index + 2 - 2 - (19 * 2)] = '-'
             recordCapture(gameId, player)
+            
 
 def doMove(gameId, row, col):
     turn = getTurn(gameId)
