@@ -6,6 +6,8 @@ app = flask.Flask(__name__)
 
 boards = {}
 gameId = 0
+capturedX = 0
+capturedO = 0
 
 @app.route("/newgame")
 def newGameHelp():
@@ -18,6 +20,9 @@ def newgame(player):
         return newGameHelp()
     global boards
     global gameId
+    global capturedX
+    global capturedO
+    capturedX = capturedO = 0
     newBoard = '-' * 361
     boards[gameId] = f"x#{newBoard}#0#0"
     if player == 'o':
@@ -48,19 +53,60 @@ def changeTurn(gameId):
     else:
         boards[gameId] = 'x' + boards[gameId][1:]
     
+def recordCapture(gameId, player):
+    if player == 'x':
+        capturedX += 1
+        board[gameID][2 + (19 * 19) + 2] = str(capturedX)
+    else:
+        capturedO += 1
+        board[gameID][2 + (19 * 19) + 4] = str(capturedO)
 
-        
 def doCaptures(gameId, row, col, player):
-    raise NotImplementedError
+    index = row * 19 + col
+    if player == 'x':
+        opponent = 'o'
+    else:
+        opponent = 'x'
+
+    if row <= 16 and col <= 16:
+        # checks for horizontal capture
+        if (board[gameId][index + 2 + 3] == player) and (board[gameId][index + 2 + 1] == board[gameId][index + 2 + 2] == opponent): # +2 to account for the "<turn>#"
+            board[gameId][index + 2 + 1] = '-'
+            board[gameId][index + 2 + 2] = '-'
+            recordCapture(gameId, player)
+        # checks for vertical capture
+        if (board[gameId][index + 2 + (19 * 3)] == player) and (board[gameId][index + 2 + 19] == board[gameId][index + 2 + (19 * 2)] == opponent):
+            board[gameId][index + 2 + 19] = '-'
+            board[gameId][index + 2 + (19 * 2)] = '-'
+            recordCapture(gameId, player)
+        # checks for diagonal capture
+        if (board[gameId][index + 2 + 3 + (19 * 3)] == player) and (board[gameId][index + 2 + 1 + 19] == board[gameId][index + 2 + 2 + (19 * 2)] == opponent):
+            board[gameId][index + 2 + 1 + 19] = '-'
+            board[gameId][index + 2 + 2 + (19 * 2)] = '-'
+            recordCapture(gameId, player)
+
+    if row >= 4 and col <= 4:
+        # checks for horizontal capture
+        if (board[gameId][index + 2 - 3] == player) and (board[gameId][index + 2 - 1] == board[gameId][index + 2 - 2] == opponent): # +2 to account for the "<turn>#"
+            board[gameId][index + 2 - 1] = '-'
+            board[gameId][index + 2 - 2] = '-'
+            recordCapture(gameId, player)
+        # checks for vertical capture
+        if (board[gameId][index + 2 - (19 * 3)] == player) and (board[gameId][index + 2 - 19] == board[gameId][index + 2 - (19 * 2)] == opponent):
+            board[gameId][index + 2 - 19] = '-'
+            board[gameId][index + 2 - (19 * 2)] = '-'
+            recordCapture(gameId, player)
+        # checks for diagonal capture
+        if (board[gameId][index + 2 - 3 - (19 * 3)] == player) and (board[gameId][index + 2 - 1 - 19] == board[gameId][index + 2 - 2 - (19 * 2)] == opponent):
+            board[gameId][index + 2 - 1 - 19] = '-'
+            board[gameId][index + 2 - 2 - (19 * 2)] = '-'
+            recordCapture(gameId, player)
 
 def doMove(gameId, row, col):
     turn = getTurn(gameId)
     setSquare(gameId, row, col, turn)
     doCaptures(gameId, row, col, turn)
     changeTurn(gameId)
-
-    raise NotImplementedError
-
 
 def doComputerMove(gameId):
     legalMoves = []
@@ -70,6 +116,7 @@ def doComputerMove(gameId):
                 legalMoves.append((row, column))
     move = legalMoves[random.randint(len(legalMoves))]
     doMove(gameId, move[0], move[1])
+
 
 
 
