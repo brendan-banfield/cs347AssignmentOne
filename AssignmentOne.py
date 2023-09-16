@@ -18,10 +18,7 @@ def newgame(player):
         return newGameHelp()
     global boards
     global gameId
-    global capturedX
-    global capturedO
-    capturedX = capturedO = 0
-    newBoard = '-' * 361
+    newBoard = '-' * 19 * 19
     boards[gameId] = f"x#{newBoard}#0#0"
     if player == 'o':
         doComputerMove(gameId)
@@ -59,54 +56,21 @@ def recordCapture(gameId, player):
         newScore = str(int(boards[gameId][-1]) + 1)
         boards[gameId] = boards[gameId][:-1] + newScore
 
+def checkCapture(gameId, row, col, direction, player, opponent):
+    dr, dc = direction
+    if row + 3*dr >= 0 and row + 3*dr < 19 and col + 3*dc >= 0 and col + 3*dc < 19:
+        if getSquare(gameId, row + dr, col + dc) == opponent and getSquare(gameId, row + 2*dr, col + 2*dc) == opponent and getSquare(gameId, row + 3*dr, col + 3*dc) == player:
+            setSquare(gameId, row + dr, col + dc, '-')
+            setSquare(gameId, row + 2*dr, col + 2*dc, '-')
+            recordCapture(gameId, player)
+
 def doCaptures(gameId, row, col, player):
-    if player == 'x':
-        opponent = 'o'
-    else:
-        opponent = 'x'
-
-    if row <= 15 and getSquare(gameId, row + 1, col) == opponent and getSquare(gameId, row + 2, col) == opponent and getSquare(gameId, row + 3, col) == player:
-        setSquare(gameId, row + 1, col, '-')
-        setSquare(gameId, row + 2, col, '-')
-        recordCapture(gameId, player)
-
-    if col <= 15 and getSquare(gameId, row, col + 1) == opponent and getSquare(gameId, row, col + 2) == opponent and getSquare(gameId, row, col + 3) == player:
-        setSquare(gameId, row, col + 1, '-')
-        setSquare(gameId, row, col + 2, '-')
-        recordCapture(gameId, player)
-        
-    if row >= 3 and getSquare(gameId, row - 1, col) == opponent and getSquare(gameId, row - 2, col) == opponent and getSquare(gameId, row - 3, col) == player:
-        setSquare(gameId, row - 1, col, '-')
-        setSquare(gameId, row - 2, col, '-')
-        recordCapture(gameId, player)
-
-    if row >= 3 and getSquare(gameId, row, col - 1) == opponent and getSquare(gameId, row, col - 2) == opponent and getSquare(gameId, row, col - 3) == player:
-        setSquare(gameId, row, col - 1, '-')
-        setSquare(gameId, row, col - 2, '-')
-        recordCapture(gameId, player)
-
-    if row <= 15 and col <= 15 and getSquare(gameId, row + 1, col + 1) == opponent and getSquare(gameId, row + 2, col + 2) == opponent and getSquare(gameId, row + 3, col + 3) == player:
-        setSquare(gameId, row + 1, col + 1, '-')
-        setSquare(gameId, row + 2, col + 2, '-')
-        recordCapture(gameId, player)
-
-    if row >= 3 and col <= 15 and getSquare(gameId, row - 1, col + 1) == opponent and getSquare(gameId, row - 2, col + 2) == opponent and getSquare(gameId, row - 3, col + 3) == player:
-        setSquare(gameId, row - 1, col + 1, '-')
-        setSquare(gameId, row - 2, col + 2, '-')
-        recordCapture(gameId, player)
-
-    if row <= 15 and col >= 3 and getSquare(gameId, row + 1, col - 1) == opponent and getSquare(gameId, row + 2, col - 2) == opponent and getSquare(gameId, row + 3, col - 3) == player:
-        setSquare(gameId, row + 1, col - 1, '-')
-        setSquare(gameId, row + 2, col - 2, '-')
-        recordCapture(gameId, player)
-
-    if row >= 3 and col >= 3 and getSquare(gameId, row - 1, col - 1) == opponent and getSquare(gameId, row - 2, col - 2) == opponent and getSquare(gameId, row - 3, col - 3) == player:
-        setSquare(gameId, row - 1, col - 1, '-')
-        setSquare(gameId, row - 2, col - 2, '-')
-        recordCapture(gameId, player)
-
+    opponent = 'o' if player == 'x' else 'x'
+    for i in range(-1, 2):
+        for j in range(-1, 2):
+            if i == 0 and j == 0: continue
+            checkCapture(gameId, row, col, (i, j), player, opponent)
     
-            
 
 def doMove(gameId, row, col):
     turn = getTurn(gameId)
