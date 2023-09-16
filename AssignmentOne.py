@@ -6,8 +6,6 @@ app = flask.Flask(__name__)
 
 boards = {}
 gameId = 0
-capturedX = 0
-capturedO = 0
 
 @app.route("/newgame")
 def newGameHelp():
@@ -30,7 +28,7 @@ def newgame(player):
     output = {'ID': gameId, 'state': boards[gameId]}
     gameId += 1
 
-    return json.dumps(output)
+    return json.dumps(output) + "<br>" + getFormattedBoard(gameId-1)
 
 @app.route("/nextmove/")
 def nextmoveHelp():
@@ -55,52 +53,59 @@ def changeTurn(gameId):
     
 def recordCapture(gameId, player):
     if player == 'x':
-        capturedX += 1
-        board[gameID][2 + (19 * 19) + 2] = str(capturedX)
+        newScore = str(int(boards[gameId][-3]) + 1)
+        boards[gameId] = boards[gameId][:-3] + newScore + boards[gameId][-2:]
     else:
-        capturedO += 1
-        board[gameID][2 + (19 * 19) + 4] = str(capturedO)
+        newScore = str(int(boards[gameId][-1]) + 1)
+        boards[gameId] = boards[gameId][:-1] + newScore
 
 def doCaptures(gameId, row, col, player):
-    index = row * 19 + col
     if player == 'x':
         opponent = 'o'
     else:
         opponent = 'x'
 
-    if row <= 16 and col <= 16:
-        # checks for horizontal capture
-        if (board[gameId][index + 2 + 3] == player) and (board[gameId][index + 2 + 1] == board[gameId][index + 2 + 2] == opponent): # +2 to account for the "<turn>#"
-            board[gameId][index + 2 + 1] = '-'
-            board[gameId][index + 2 + 2] = '-'
-            recordCapture(gameId, player)
-        # checks for vertical capture
-        if (board[gameId][index + 2 + (19 * 3)] == player) and (board[gameId][index + 2 + 19] == board[gameId][index + 2 + (19 * 2)] == opponent):
-            board[gameId][index + 2 + 19] = '-'
-            board[gameId][index + 2 + (19 * 2)] = '-'
-            recordCapture(gameId, player)
-        # checks for diagonal capture
-        if (board[gameId][index + 2 + 3 + (19 * 3)] == player) and (board[gameId][index + 2 + 1 + 19] == board[gameId][index + 2 + 2 + (19 * 2)] == opponent):
-            board[gameId][index + 2 + 1 + 19] = '-'
-            board[gameId][index + 2 + 2 + (19 * 2)] = '-'
-            recordCapture(gameId, player)
+    if row <= 15 and getSquare(gameId, row + 1, col) == opponent and getSquare(gameId, row + 2, col) == opponent and getSquare(gameId, row + 3, col) == player:
+        setSquare(gameId, row + 1, col, '-')
+        setSquare(gameId, row + 2, col, '-')
+        recordCapture(gameId, player)
 
-    if row >= 4 and col <= 4:
-        # checks for horizontal capture
-        if (board[gameId][index + 2 - 3] == player) and (board[gameId][index + 2 - 1] == board[gameId][index + 2 - 2] == opponent): # +2 to account for the "<turn>#"
-            board[gameId][index + 2 - 1] = '-'
-            board[gameId][index + 2 - 2] = '-'
-            recordCapture(gameId, player)
-        # checks for vertical capture
-        if (board[gameId][index + 2 - (19 * 3)] == player) and (board[gameId][index + 2 - 19] == board[gameId][index + 2 - (19 * 2)] == opponent):
-            board[gameId][index + 2 - 19] = '-'
-            board[gameId][index + 2 - (19 * 2)] = '-'
-            recordCapture(gameId, player)
-        # checks for diagonal capture
-        if (board[gameId][index + 2 - 3 - (19 * 3)] == player) and (board[gameId][index + 2 - 1 - 19] == board[gameId][index + 2 - 2 - (19 * 2)] == opponent):
-            board[gameId][index + 2 - 1 - 19] = '-'
-            board[gameId][index + 2 - 2 - (19 * 2)] = '-'
-            recordCapture(gameId, player)
+    if col <= 15 and getSquare(gameId, row, col + 1) == opponent and getSquare(gameId, row, col + 2) == opponent and getSquare(gameId, row, col + 3) == player:
+        setSquare(gameId, row, col + 1, '-')
+        setSquare(gameId, row, col + 2, '-')
+        recordCapture(gameId, player)
+        
+    if row >= 3 and getSquare(gameId, row - 1, col) == opponent and getSquare(gameId, row - 2, col) == opponent and getSquare(gameId, row - 3, col) == player:
+        setSquare(gameId, row - 1, col, '-')
+        setSquare(gameId, row - 2, col, '-')
+        recordCapture(gameId, player)
+
+    if row >= 3 and getSquare(gameId, row, col - 1) == opponent and getSquare(gameId, row, col - 2) == opponent and getSquare(gameId, row, col - 3) == player:
+        setSquare(gameId, row, col - 1, '-')
+        setSquare(gameId, row, col - 2, '-')
+        recordCapture(gameId, player)
+
+    if row <= 15 and col <= 15 and getSquare(gameId, row + 1, col + 1) == opponent and getSquare(gameId, row + 2, col + 2) == opponent and getSquare(gameId, row + 3, col + 3) == player:
+        setSquare(gameId, row + 1, col + 1, '-')
+        setSquare(gameId, row + 2, col + 2, '-')
+        recordCapture(gameId, player)
+
+    if row >= 3 and col <= 15 and getSquare(gameId, row - 1, col + 1) == opponent and getSquare(gameId, row - 2, col + 2) == opponent and getSquare(gameId, row - 3, col + 3) == player:
+        setSquare(gameId, row - 1, col + 1, '-')
+        setSquare(gameId, row - 2, col + 2, '-')
+        recordCapture(gameId, player)
+
+    if row <= 15 and col >= 3 and getSquare(gameId, row + 1, col - 1) == opponent and getSquare(gameId, row + 2, col - 2) == opponent and getSquare(gameId, row + 3, col - 3) == player:
+        setSquare(gameId, row + 1, col - 1, '-')
+        setSquare(gameId, row + 2, col - 2, '-')
+        recordCapture(gameId, player)
+
+    if row >= 3 and col >= 3 and getSquare(gameId, row - 1, col - 1) == opponent and getSquare(gameId, row - 2, col - 2) == opponent and getSquare(gameId, row - 3, col - 3) == player:
+        setSquare(gameId, row - 1, col - 1, '-')
+        setSquare(gameId, row - 2, col - 2, '-')
+        recordCapture(gameId, player)
+
+    
             
 
 def doMove(gameId, row, col):
@@ -115,20 +120,28 @@ def doComputerMove(gameId):
         for column in range(19):
             if getSquare(gameId, row, column) == '-':
                 legalMoves.append((row, column))
-    move = legalMoves[random.randint(len(legalMoves))]
+    move = legalMoves[random.randint(0, len(legalMoves)-1)]
     doMove(gameId, move[0], move[1])
 
-
+def getFormattedBoard(gameId):
+    squares = boards[gameId][2:-4].replace("-", "_")
+    lines = [" ".join(list(squares[19 * i: 19 * i + 19]) + [str(i+1)]) for i in range(19)]
+    lines.append("0 " * 9 + "1 " * 10)
+    lines.append(" ".join([str(i % 10) for i in range(1, 20)]))
+    return "<br>".join(lines)
 
 
 @app.route("/nextmove/<int:gameId>/<int:row>/<int:column>")
 def nextmove(gameId, row, column):
+    row -= 1
+    column -= 1
     global boards
     if gameId not in boards or row < 0 or row >= 19 or column < 0 or column >= 19 or getSquare(gameId, row, column) != "-":
         return nextmoveHelp()
     #setSquare(gameId, row, column, 'O')
-    doMove(gameId, row, column, getTurn(gameId))
-    return json.dumps({'ID': gameId, 'row': row, 'column': column, 'state': boards[gameId]})
+    doMove(gameId, row, column)
+    doComputerMove(gameId)
+    return json.dumps({'ID': gameId, 'row': row, 'column': column, 'state': boards[gameId]}) + "<br>" + getFormattedBoard(gameId)
 
 
 if __name__ == '__main__':
