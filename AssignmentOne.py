@@ -140,39 +140,24 @@ def findGoodMoves(gameId: int) -> list[tuple[int, int]]:
     p = getTurn(gameId)
     o = "x" if p == "o" else "o"
 
-    fives = searchForPattern(gameId, ['-', p, p, p, p])
-    if len(fives) > 0:
-        return fives
+    # move patterns in order of how good they are
+    patterns = [['-', p, p, p, p], # make five in a row
+                    ['-', o, o, o, o], # block five in a row
+                    ['-', p, p, p], # make four in a row
+                    [o, o, '_', o], # block four in a row
+                    ['-', o, o, o, '*'], # block four in a row away from the edge
+                    ['-', o, o, p], # make a capture
+                    ['-', p, p, '*'], # threaten a capture away from the edge
+                    ['-', p, '-'], # make two in a row with space
+                    ['-', o, '*'], # get in the way, away from the edge
+                    ['-']] # any legal move
     
-    blocks = searchForPattern(gameId, ['-', o, o, o, o])
-    if len(blocks) > 0:
-        return blocks
+    for pattern in patterns:
+        moves = searchForPattern(gameId, pattern)
+        if len(moves) > 0:
+            return moves
     
-    fours = searchForPattern(gameId, ['-', p, p, p])
-    if len(fours) > 0:
-        return fours
-    
-    safeties = searchForPattern(gameId, [o, o, '_', o])
-    if len(safeties) > 0:
-        return safeties
-    
-    oppThrees = searchForPattern(gameId, ['-', o, o, o, '*'])
-    if len(oppThrees) > 0:
-        return oppThrees
-    
-    threes = searchForPattern(gameId, ['-', p, p])
-    if len(threes) > 0:
-        return threes
-    
-    captures = searchForPattern(gameId, ['-', o, o, p])
-    if len(captures) > 0:
-        return captures
-    
-    ideas = searchForPattern(gameId, ['-', o, '*']) + searchForPattern(gameId, ['-', p])
-    if len(ideas) > 0:
-        return ideas
-    
-    return searchForPattern(gameId, ['-'])
+    raise NotImplementedError
     
     
 
@@ -205,7 +190,6 @@ def nextmove(gameId: int, row: int, column: int) -> str:
     global boards
     if gameId not in boards or row < 0 or row >= 19 or column < 0 or column >= 19 or getSquare(gameId, row, column) != "-":
         return nextmoveHelp()
-    #setSquare(gameId, row, column, 'O')
     doMove(gameId, row, column)
     doComputerMove(gameId)
     return json.dumps({'ID': gameId, 'row': row, 'column': column, 'state': boards[gameId]}) + "<br>" + getFormattedBoard(gameId)
