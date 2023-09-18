@@ -150,11 +150,6 @@ def findGoodMoves(gameId):
 
 def doComputerMove(gameId):
     moveChoices = findGoodMoves(gameId)
-    '''legalMoves = []
-    for column in range(19):
-        if getSquare(gameId, row, column) == '-':
-            legalMoves.append((row, column))'''
-    #move = legalMoves[random.randint(0, len(legalMoves)-1)]
     move = moveChoices[random.randint(0, len(moveChoices)-1)]
     doMove(gameId, move[0], move[1])
 
