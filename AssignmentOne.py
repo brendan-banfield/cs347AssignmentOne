@@ -56,13 +56,23 @@ def changeTurn(gameId):
         boards[gameId] = 'x' + boards[gameId][1:]
 
 def checkPattern(gameId, start: tuple, direction: tuple, pattern: list) -> bool:
+    # x and o: player characters
+    # *: wildcard
+    # |: border
+    # -: empty
+    # _: empty but the place to move in (center of the pattern)
     r, c = start
     dr, dc = direction
     l = len(pattern)
     if not isInBounds(r + (l-1)*dr, c + (l-1)*dc):
+        if pattern[-1] == '|' and isInBounds(r + (l-2)*dr, c + (l-2)*dc):
+            l -= 1
+        else:
+            return False
+    elif pattern[-1] == '|':
         return False
     for i in range(l):
-        if getSquare(gameId, r, c) != pattern[i]:
+        if getSquare(gameId, r, c) != pattern[i] and pattern[i] != "*":
             return False
         r += dr
         c += dc
@@ -109,6 +119,11 @@ def doMove(gameId, row, col):
     changeTurn(gameId)
 
 def searchForPattern(gameId, pattern):
+    if "_" in pattern:
+        moveIdx = pattern.index("_")
+        pattern[moveIdx] = "-"
+    else:
+        moveIdx = 0
     captures = []
     for r in range(19):
         for c in range(19):
@@ -117,7 +132,7 @@ def searchForPattern(gameId, pattern):
                     if dr == 0 and dc == 0:
                         continue
                     if checkPattern(gameId, (r, c), (dr, dc), pattern):
-                        captures.append((r, c))
+                        captures.append((r + dr*moveIdx, c+dc*moveIdx))
     return captures
 
 def findGoodMoves(gameId):
@@ -128,9 +143,21 @@ def findGoodMoves(gameId):
     if len(fives) > 0:
         return fives
     
+    blocks = searchForPattern(gameId, ['-', o, o, o, o])
+    if len(blocks) > 0:
+        return blocks
+    
     fours = searchForPattern(gameId, ['-', p, p, p])
     if len(fours) > 0:
         return fours
+    
+    safeties = searchForPattern(gameId, [o, o, '_', o])
+    if len(safeties) > 0:
+        return safeties
+    
+    oppThrees = searchForPattern(gameId, ['-', o, o, o, '*'])
+    if len(oppThrees) > 0:
+        return oppThrees
     
     threes = searchForPattern(gameId, ['-', p, p])
     if len(threes) > 0:
@@ -140,7 +167,7 @@ def findGoodMoves(gameId):
     if len(captures) > 0:
         return captures
     
-    ideas = searchForPattern(gameId, ['-', o]) + searchForPattern(gameId, ['-', p])
+    ideas = searchForPattern(gameId, ['-', o, '*']) + searchForPattern(gameId, ['-', p])
     if len(ideas) > 0:
         return ideas
     
