@@ -108,13 +108,54 @@ def doMove(gameId, row, col):
     checkForFiveInARow(gameId, row, col, turn)
     changeTurn(gameId)
 
+def searchForPattern(gameId, pattern):
+    captures = []
+    for r in range(19):
+        for c in range(19):
+            for dr in range(-1, 2):
+                for dc in range(-1, 2):
+                    if dr == 0 and dc == 0:
+                        continue
+                    if checkPattern(gameId, (r, c), (dr, dc), pattern):
+                        captures.append((r, c))
+    return captures
+
+def findGoodMoves(gameId):
+    p = getTurn(gameId)
+    o = "x" if p == "o" else "o"
+
+    fives = searchForPattern(gameId, ['-', p, p, p, p])
+    if len(fives) > 0:
+        return fives
+    
+    fours = searchForPattern(gameId, ['-', p, p, p])
+    if len(fours) > 0:
+        return fours
+    
+    threes = searchForPattern(gameId, ['-', p, p])
+    if len(threes) > 0:
+        return threes
+    
+    captures = searchForPattern(gameId, ['-', o, o, p])
+    if len(captures) > 0:
+        return captures
+    
+    ideas = searchForPattern(gameId, ['-', o]) + searchForPattern(gameId, ['-', p])
+    if len(ideas) > 0:
+        return ideas
+    
+    return searchForPattern(gameId, ['-'])
+    
+    
+
 def doComputerMove(gameId):
-    legalMoves = []
-    for row in range(19):
-        for column in range(19):
-            if getSquare(gameId, row, column) == '-':
-                legalMoves.append((row, column))
-    move = legalMoves[random.randint(0, len(legalMoves)-1)]
+    moveChoices = findGoodMoves(gameId)
+    '''legalMoves = []
+    for column in range(19):
+        if getSquare(gameId, row, column) == '-':
+            legalMoves.append((row, column))'''
+    #move = legalMoves[random.randint(0, len(legalMoves)-1)]
+    move = moveChoices[random.randint(0, len(moveChoices)-1)]
     doMove(gameId, move[0], move[1])
 
 def getFormattedBoard(gameId):
