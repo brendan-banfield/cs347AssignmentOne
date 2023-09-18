@@ -38,6 +38,13 @@ def setSquare(gameId, row, column, newChar):
     idx = row * 19 + column + 2
     boards[gameId] = boards[gameId][:idx] + newChar + boards[gameId][idx + 1:]
 
+def isInBounds(row, col):
+    if row < 0 or row >= 19:
+        return False
+    if col < 0 or col >= 19:
+        return False
+    return True
+
 def getTurn(gameId):
     return boards[gameId][0]
 
@@ -48,11 +55,25 @@ def changeTurn(gameId):
     else:
         boards[gameId] = 'x' + boards[gameId][1:]
 
+def checkPattern(gameId, start: tuple, direction: tuple, pattern: list) -> bool:
+    r, c = start
+    dr, dc = direction
+    l = len(pattern)
+    if not isInBounds(r + (l-1)*dr, c + (l-1)*dc):
+        return False
+    for i in range(l):
+        if getSquare(gameId, r, c) != pattern[i]:
+            return False
+        r += dr
+        c += dc
+    return True
+        
+
 def getCaptures(gameId, player):
     if player == 'x':
-        return int(boards[gameId][2 + 19 * 19 + 2])
+        return int(boards[gameId][2 + 19 * 19 + 1])
     else:
-        return int(boards[gameId][2 + 19 * 19 + 4])
+        return int(boards[gameId][2 + 19 * 19 + 3])
     
 def recordCapture(gameId, player):
     if player == 'x':
@@ -63,25 +84,28 @@ def recordCapture(gameId, player):
         boards[gameId] = boards[gameId][:-1] + newScore
 
 def checkCapture(gameId, row, col, direction, player, opponent):
-    dr, dc = direction
-    if row + 3*dr >= 0 and row + 3*dr < 19 and col + 3*dc >= 0 and col + 3*dc < 19:
-        if getSquare(gameId, row + dr, col + dc) == opponent and getSquare(gameId, row + 2*dr, col + 2*dc) == opponent and getSquare(gameId, row + 3*dr, col + 3*dc) == player:
-            setSquare(gameId, row + dr, col + dc, '-')
-            setSquare(gameId, row + 2*dr, col + 2*dc, '-')
-            recordCapture(gameId, player)
+    if checkPattern(gameId, (row, col), direction, [player, opponent, opponent, player]):
+        dr, dc = direction
+        setSquare(gameId, row + dr, col + dc, '-')
+        setSquare(gameId, row + 2*dr, col + 2*dc, '-')
+        recordCapture(gameId, player)
 
 def doCaptures(gameId, row, col, player):
     opponent = 'o' if player == 'x' else 'x'
     for i in range(-1, 2):
         for j in range(-1, 2):
             if i == 0 and j == 0: continue
-            checkCapture(gameId, row, col, (i, j), player, opponent)
+            checkCapture(gameId, row, col, (i, j), player, opponent)  
+    if getCaptures(gameId, player) >= 5:
+        displayWin(gameId, player)
+
     
 
 def doMove(gameId, row, col):
     turn = getTurn(gameId)
     setSquare(gameId, row, col, turn)
     doCaptures(gameId, row, col, turn)
+    checkForFiveInARow(gameId, row, col, turn)
     changeTurn(gameId)
 
 def doComputerMove(gameId):
@@ -100,29 +124,15 @@ def getFormattedBoard(gameId):
     lines.append(" ".join([str(i % 10) for i in range(1, 20)]))
     return "<br>".join(lines)
 
-def checkConsecutiveSquares(gameId, row, col, direction, player):
-    for i in range(-1, 2):
-        for j in range(-1, 1):
-            if i == 0 and j == 0: continue
-            if i == 1 and j == 0: continue
-            if consecutiveSquaresHelper(gameId, row, col, (i, j), player) >= 5:
-                return True
-    return False            
+def displayWin(gameId, player):
+    raise NotImplementedError
 
-def checkConsecutiveSquaresHelper(gameId, row, col, direction, player):
-    dr, dc = direction
-    tempRow = row - dr
-    tempCol = col - dc
-    consecutiveTotal = 0
-    while getSquare(gameId, row, col) == player and (0 <= row + dr < 19) and (0 <= col + dc < 19):
-        consecutiveTotal += 1
-        row += dr
-        col += dc
-    while getSquare(gameId, tempRow, tempCol) == player and (0 <= tempRow + dr < 19) and (0 <= tempCol + dc < 19):
-        consecutiveTotal += 1
-        tempRow -= dr
-        tempCol -= dc
-    return consecutiveTotal
+def checkForFiveInARow(gameId, row, col, player):
+    for i in range(-1, 2):
+        for j in range(-1, 2):
+            if i == 0 and j == 0: continue
+            if checkPattern(gameId, (row, col), (i, j), [player] * 5):
+                displayWin(gameId, player)
  
 @app.route("/nextmove/<int:gameId>/<int:row>/<int:column>")
 def nextmove(gameId, row, column):
