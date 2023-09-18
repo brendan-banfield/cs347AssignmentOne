@@ -47,6 +47,12 @@ def changeTurn(gameId):
         boards[gameId] = 'o' + boards[gameId][1:]
     else:
         boards[gameId] = 'x' + boards[gameId][1:]
+
+def getCaptures(gameId, player):
+    if player == 'x':
+        return int(boards[gameId][2 + 19 * 19 + 2])
+    else:
+        return int(boards[gameId][2 + 19 * 19 + 4])
     
 def recordCapture(gameId, player):
     if player == 'x':
@@ -94,7 +100,30 @@ def getFormattedBoard(gameId):
     lines.append(" ".join([str(i % 10) for i in range(1, 20)]))
     return "<br>".join(lines)
 
+def checkConsecutiveSquares(gameId, row, col, direction, player):
+    for i in range(-1, 2):
+        for j in range(-1, 1):
+            if i == 0 and j == 0: continue
+            if i == 1 and j == 0: continue
+            if consecutiveSquaresHelper(gameId, row, col, (i, j), player) >= 5:
+                return True
+    return False            
 
+def checkConsecutiveSquaresHelper(gameId, row, col, direction, player):
+    dr, dc = direction
+    tempRow = row - dr
+    tempCol = col - dc
+    consecutiveTotal = 0
+    while getSquare(gameId, row, col) == player and (0 <= row + dr < 19) and (0 <= col + dc < 19):
+        consecutiveTotal += 1
+        row += dr
+        col += dc
+    while getSquare(gameId, tempRow, tempCol) == player and (0 <= tempRow + dr < 19) and (0 <= tempCol + dc < 19):
+        consecutiveTotal += 1
+        tempRow -= dr
+        tempCol -= dc
+    return consecutiveTotal
+ 
 @app.route("/nextmove/<int:gameId>/<int:row>/<int:column>")
 def nextmove(gameId, row, column):
     row -= 1
